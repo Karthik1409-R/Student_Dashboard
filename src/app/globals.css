@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* Use the Poppins font provided via next/font (CSS variable set on html by RootLayout) */
+html,
+body,
+#__next {
+  font-family:
+    var(--font-poppins),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial;
+}
+
 body {
   background: black;
+}
+
+/* Ensure Poppins applies across all elements and wins over utility resets */
+* {
+  font-family:
+    var(--font-poppins),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial !important;
 }

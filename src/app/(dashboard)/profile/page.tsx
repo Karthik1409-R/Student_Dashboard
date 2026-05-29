@@ -39,7 +39,7 @@ export default function ProfilePage() {
         <section className="flex-1 text-center md:text-left relative z-10">
           <fieldset className="border-none p-0 m-0 flex flex-col md:flex-row md:items-center gap-2.5">
             <h2 className="text-xl font-bold text-white tracking-tight">
-              Karthik Kumar
+              Karthik
             </h2>
             <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 w-fit mx-auto md:mx-0">
               <ShieldCheck size={12} /> PRO STUDENT
@@ -160,7 +160,7 @@ export default function ProfilePage() {
                   </span>
                   <div>
                     <span className="block text-sm font-semibold text-white">
-                      Advanced Next.js Architecture
+                      Advanced React Patterns
                     </span>
                     <span className="block text-xs text-zinc-500 mt-0.5">
                       Issued September 2025 • ID: NX-99210

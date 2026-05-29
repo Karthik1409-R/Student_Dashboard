@@ -12,14 +12,12 @@ interface Course {
   created_at: string;
 }
 
-// 1. FINE-TUNED SLOW ORCHESTRATION VARIANTS
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      // Increased from 0.12 to 0.25 to make the gap between each card's entry clearly noticeable and slower
-      staggerChildren: 0.40,
+      staggerChildren: 0.4,
     },
   },
 };
@@ -27,15 +25,14 @@ const containerVariants = {
 const cardVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 35, // Dropped slightly lower for a more dramatic rise
+    y: 35,
   },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      // Swapped type: "spring" for an elegant, controlled cubic-bezier ease curve
-      duration: 0.8, // Takes 0.8 seconds to complete the lift animation
-      ease: [0.16, 1, 0.3, 1], // Custom premium ease-out curve (smooth deceleration)
+      duration: 0.8,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };
@@ -44,6 +41,10 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // States to persist state changes locally per course ID
+  const [wishlist, setWishlist] = useState<Record<string, boolean>>({});
+  const [cart, setCart] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     async function fetchCoursesViaAPI() {
@@ -84,6 +85,19 @@ export default function CoursesPage() {
     fetchCoursesViaAPI();
   }, []);
 
+  // Handler functions to intercept click parameters safely
+  const toggleWishlist = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWishlist((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleCart = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCart((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   if (loading) {
     return (
       <section className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl w-full mx-auto auto-rows-[200px]">
@@ -118,7 +132,7 @@ export default function CoursesPage() {
         </p>
       </header>
 
-      {/* 2. PARENT MOTIVATOR */}
+      {/* PARENT MOTIVATOR */}
       <motion.ul
         variants={containerVariants}
         initial="hidden"
@@ -133,6 +147,9 @@ export default function CoursesPage() {
           }>;
           const isWideCard = index === 0 || index === 3 || index === 4;
 
+          const isWishlisted = !!wishlist[course.id];
+          const isInCart = !!cart[course.id];
+
           const formattedDate = new Date(course.created_at).toLocaleDateString(
             "en-US",
             {
@@ -143,7 +160,7 @@ export default function CoursesPage() {
           );
 
           return (
-            /* 3. CHILD CARD HOOK */
+            /* CHILD CARD HOOK */
             <motion.li
               key={course.id}
               variants={cardVariants}
@@ -187,27 +204,78 @@ export default function CoursesPage() {
                   )}
                 </div>
 
-                <footer className="relative z-10 w-full mt-auto">
-                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider mb-2">
-                    <span className="text-zinc-500 group-hover:text-zinc-400 transition-colors">
-                      Progress
-                    </span>
-                    <span className="font-mono text-zinc-400 group-hover:text-cyan-400 transition-colors">
-                      {course.progress}%
-                    </span>
+                {/* COMBINED INTERACTIVE ACTION FOOTER */}
+                <footer className="relative z-10 w-full mt-auto flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Progress tracking bar sub-panel */}
+                    <div className="flex flex-col flex-1">
+                      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider mb-1.5">
+                        <span className="text-zinc-500 group-hover:text-zinc-400 transition-colors">
+                          Progress
+                        </span>
+                        <span className="font-mono text-zinc-400 group-hover:text-cyan-400 transition-colors">
+                          {course.progress}%
+                        </span>
+                      </div>
+                      <span className="block w-full h-2 bg-zinc-900 border border-zinc-800/50 rounded-full overflow-hidden relative">
+                        <motion.span
+                          initial={{ width: 0 }}
+                          animate={{ width: `${course.progress}%` }}
+                          transition={{
+                            duration: 1.4,
+                            ease: [0.16, 1, 0.3, 1],
+                            delay: 0.45,
+                          }}
+                          className="absolute left-0 top-0 h-full bg-linear-to-r from-purple-500 via-indigo-500 to-cyan-500 rounded-full shadow-lg shadow-purple-500/10"
+                        />
+                      </span>
+                    </div>
+
+                    {/* Quick Utilities Button Panel Container */}
+                    <div className="flex items-center gap-1.5 shrink-0 pt-4">
+                      {/* Wishlist/Like Action Toggle Trigger */}
+                      <motion.button
+                        whileHover={{ scale: 1.06 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={(e) => toggleWishlist(course.id, e)}
+                        className={`p-2 rounded-xl border transition-all duration-300 ${
+                          isWishlisted
+                            ? "bg-rose-500/10 border-rose-500/30 text-rose-400 shadow-lg shadow-rose-950/20"
+                            : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+                        }`}
+                        aria-label={
+                          isWishlisted
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
+                        }
+                      >
+                        <Icons.Heart
+                          size={15}
+                          fill={isWishlisted ? "currentColor" : "none"}
+                        />
+                      </motion.button>
+
+                      {/* Add to Cart Action Toggle Trigger */}
+                      <motion.button
+                        whileHover={{ scale: 1.06 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={(e) => toggleCart(course.id, e)}
+                        className={`p-2 rounded-xl border transition-all duration-300 ${
+                          isInCart
+                            ? "bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-lg shadow-cyan-950/20"
+                            : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700"
+                        }`}
+                        aria-label={
+                          isInCart ? "Remove from cart" : "Add to cart"
+                        }
+                      >
+                        <Icons.ShoppingBag
+                          size={15}
+                          fill={isInCart ? "currentColor" : "none"}
+                        />
+                      </motion.button>
+                    </div>
                   </div>
-                  <span className="block w-full h-2 bg-zinc-900 border border-zinc-800/50 rounded-full overflow-hidden relative">
-                    <motion.span
-                      initial={{ width: 0 }}
-                      animate={{ width: `${course.progress}%` }}
-                      transition={{
-                        duration: 1.4, // Slowed down progress line expansion
-                        ease: [0.16, 1, 0.3, 1],
-                        delay: 0.45, // Waits safely for the main card lift to finish before filling out
-                      }}
-                      className="absolute left-0 top-0 h-full bg-linear-to-r from-purple-500 via-indigo-500 to-cyan-500 rounded-full shadow-lg shadow-purple-500/10"
-                    />
-                  </span>
                 </footer>
               </article>
             </motion.li>
